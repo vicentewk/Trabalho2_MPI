@@ -4,7 +4,7 @@ all: compile
 compile:
 	clear 
 	
-	mpicc 	-o m 	4_primo_mpi.c
+	mpicc 	-o trab2 	4_primo_mpi.c -lm
 
 
 	@echo "Compilaçao concluida"

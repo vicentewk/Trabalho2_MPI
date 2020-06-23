@@ -2,15 +2,17 @@
 #include <stdio.h>
 #include "tempo.h"
 #include <stdlib.h>
-#include <math.h>
 
 int fprimo(int);
 
 int main(int argc, char *argv[])
 {
 
+	int n;
+
 	MPI_Status status;
 	int myid, numprocs;
+
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
@@ -21,30 +23,22 @@ int main(int argc, char *argv[])
 	{
 
 		int numero = 0;
-		int limite = 0;
+		int fim;
 		int m;
 		int i = 1;
 		int num_calculado = 0;
 		int total = 0;
-		int total_mestre = 0;
+		int total_mestre;
 		int totale = 0;
-		int totalf = 0;
-		int k = 0;
-		int w = 0;
 
 		printf("\nDigite um numero limite: ");
-		scanf("%d", &limite);
-		k = ceil((int)limite / numprocs);
+		scanf("%d", &n);
+
 		//int parte = n / numprocs;
 
 		//printf("\nNumero total de processos: %d\n\n", numprocs);
 		//mestre 0 envia para todos (1 ate n-1) escravos em ordem de i
-		for (i = 1; i < numprocs; i++)
-		{
-			MPI_Send(&limite, 1, MPI_INT, i, 4, MPI_COMM_WORLD);
-		}
-
-		while (num_calculado < limite)
+		while (num_calculado < n)
 		{
 			num_calculado++;
 			total = fprimo(num_calculado);
@@ -52,17 +46,16 @@ int main(int argc, char *argv[])
 			printf("\n Mestre calculou %d ", num_calculado);
 			while (i < numprocs)
 			{
-				num_calculado++;
-				if (num_calculado > limite)
+				if (num_calculado >= n)
 				{
 					break;
 				}
 				else
 				{
+					num_calculado++;
 
 					MPI_Send(&num_calculado, 1, MPI_INT, i, 4, MPI_COMM_WORLD);
-
-					//printf("\n mestre enviou  ---  %d\n", num_calculado);
+					printf("\n escravo %d recebeu  ---  %d\n", i, num_calculado);
 
 					i++;
 				}
@@ -74,51 +67,44 @@ int main(int argc, char *argv[])
 		tempoFinal("mili segundos", argv[0], MSGLOG);
 
 		//mestre recebe de todos os escravos em qualquer ordem
-
 		for (i = 1; i < numprocs; i++)
 		{
-
 			//printf("\n total de primos do mestre: %d", total_mestre);
 			MPI_Recv(&m, 1, MPI_INT, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD, &status);
 			//printf("\n mestre recebeu = %d  do slave %d\n", m, status.MPI_SOURCE);
 
 			totale += m;
-
-			w++;
 		}
-
-		totalf = totale + total_mestre;
+		//totalf = totale + total_mestre;
 		printf("\n\nTOTAL de primos é %d \n\n", totale + total_mestre);
 	}
 	else
 	{
 		int x = 0;
 		int numero_recebido;
-		int count = 0;
+		int count;
 		int z = 0;
-		int w = 0;
-		int limite_slave = 0;
 
-		MPI_Recv(&limite_slave, 1, MPI_INT, 0, 4, MPI_COMM_WORLD, &status);
-		z = ceil((int)limite_slave / numprocs);
-
-		//	printf("limite slave: %d", limite_slave);
-
-		while (w < z)
+		while (z <= numprocs)
 		{
 			MPI_Recv(&numero_recebido, 1, MPI_INT, 0, 4, MPI_COMM_WORLD, &status);
-			printf("\n escravo %d recebeu = %6d \n", myid, numero_recebido);
+		//	printf("\n escravo %d recebeu = %6d \n", myid, numero_recebido);
 			x = fprimo(numero_recebido);
-			count += x;
-			w++;
-
-			//printf("\n total de primos %d do escravo %d ", count, myid);
+			if (x == 1)
+			{
+				count++;
+			}
+			z++;
 		}
-		//	printf("\n  count %d escravo %d", count, myid);
+
+		z = 1;
+
+		//for (int z = 1; z <= numprocs; z++)
 
 		MPI_Send(&count, 1, MPI_INT, 0, 4, MPI_COMM_WORLD);
+		printf("\n total de primos %d do escravo %d ", count, myid);
 		tempo2();
-		tempoFinal("mili segundos", argv[0], MSGLOG);
+		tempoFinal("mili segundos do escravo", argv[0], MSGLOG);
 	}
 
 	MPI_Finalize();
@@ -131,7 +117,7 @@ int fprimo(int numero_testado)
 {
 	int i;
 	int div;
-	
+	int total = 0;
 
 	div = 0;
 	//printf("\n função de teste executada com o número %d  ", numero_testado);
@@ -140,9 +126,6 @@ int fprimo(int numero_testado)
 		if (numero_testado % i == 0)
 		{
 			div++;
-		}
-		if(div>2){
-			break;
 		}
 	}
 
