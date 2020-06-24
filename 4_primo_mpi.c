@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
 		printf("\nDigite um numero limite: ");
 		scanf("%d", &limite);
 		k = ceil((int)limite / numprocs);
-		//int parte = n / numprocs;
 
 		//printf("\nNumero total de processos: %d\n\n", numprocs);
 		//mestre 0 envia para todos (1 ate n-1) escravos em ordem de i
@@ -49,7 +48,7 @@ int main(int argc, char *argv[])
 			num_calculado++;
 			total = fprimo(num_calculado);
 			total_mestre = total_mestre + total;
-			printf("\n Mestre calculou %d ", num_calculado);
+			//printf("\n Mestre calculou %d ", num_calculado);
 			while (i < numprocs)
 			{
 				num_calculado++;
@@ -71,6 +70,7 @@ int main(int argc, char *argv[])
 		}
 
 		tempo2();
+		printf("\n O mestre %d terminou a execução em", myid);
 		tempoFinal("mili segundos", argv[0], MSGLOG);
 
 		//mestre recebe de todos os escravos em qualquer ordem
@@ -95,29 +95,30 @@ int main(int argc, char *argv[])
 		int x = 0;
 		int numero_recebido;
 		int count = 0;
-		int z = 0;
+		int z=0;
 		int w = 0;
-		int limite_slave = 0;
+		int limite_slave;
 
 		MPI_Recv(&limite_slave, 1, MPI_INT, 0, 4, MPI_COMM_WORLD, &status);
 		z = ceil((int)limite_slave / numprocs);
+		
+		//printf("\n limite slave: %d", z);
 
-		//	printf("limite slave: %d", limite_slave);
-
-		while (w < z)
+		while (w < (z-1))
 		{
 			MPI_Recv(&numero_recebido, 1, MPI_INT, 0, 4, MPI_COMM_WORLD, &status);
-			printf("\n escravo %d recebeu = %6d \n", myid, numero_recebido);
+			//	printf("\n escravo %d recebeu = %6d \n", myid, numero_recebido);
 			x = fprimo(numero_recebido);
 			count += x;
 			w++;
 
 			//printf("\n total de primos %d do escravo %d ", count, myid);
 		}
-		//	printf("\n  count %d escravo %d", count, myid);
 
 		MPI_Send(&count, 1, MPI_INT, 0, 4, MPI_COMM_WORLD);
 		tempo2();
+
+		printf("\n O escravo %d terminou a execução em", myid);
 		tempoFinal("mili segundos", argv[0], MSGLOG);
 	}
 
@@ -131,7 +132,6 @@ int fprimo(int numero_testado)
 {
 	int i;
 	int div;
-	
 
 	div = 0;
 	//printf("\n função de teste executada com o número %d  ", numero_testado);
@@ -141,7 +141,8 @@ int fprimo(int numero_testado)
 		{
 			div++;
 		}
-		if(div>2){
+		if (div > 2)
+		{
 			break;
 		}
 	}
